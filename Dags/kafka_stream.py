@@ -1,18 +1,47 @@
+import json
 from datetime import datetime
-from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
+# from airflow import DAG
+# from airflow.operators.python_operator import PythonOperator
 
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2024, 6, 7, 0, 0, 0)
 }
 
-def streaming_data_from_api():
+def get_data():
     import  json
     import requests
 
     res = requests.get('https://randomuser.me/api/')
-    print(res.json())
+    res = res.json()
+    res = res['results'][0]
+
+    return res
+
+def format_data(res):
+    data = {}
+    location = res['location']
+    data['first_name'] = res['name']['first']
+    data['last_name'] = res['name']['last']
+    data['gender'] = res['gender']
+    data['postcode'] = res['location']['postcode']
+    data['city'] = res['location']['city']
+    data['state'] = res['location']['state']
+    data['country'] = res['location']['country']
+    data['email'] = res['email']
+    data['phone'] = res['phone']
+    data['cell'] = res['cell']
+    data['latitude'] = location['coordinates']['latitude']
+    data['longitude'] = location['coordinates']['longitude']
+    data['timezone'] = location['timezone']['offset']
+    data['utc'] = location['timezone']['description']
+
+    return data
+
+def stream_data():
+    res = get_data()
+    data = format_data(res)
+    print(json.dumps(data, indent=4))
 
 # with DAG('user_automation',
 #     default_args=default_args,
@@ -25,4 +54,4 @@ def streaming_data_from_api():
 #         python_callable=streaming_data_from_api
 #     )
 
-streaming_data_from_api();
+stream_data();
