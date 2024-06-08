@@ -9,7 +9,6 @@ default_args = {
 }
 
 def get_data():
-    import  json
     import requests
 
     res = requests.get('https://randomuser.me/api/')
@@ -39,9 +38,14 @@ def format_data(res):
     return data
 
 def stream_data():
+    from kafka import KafkaProducer
     res = get_data()
     data = format_data(res)
-    print(json.dumps(data, indent=4))
+    # print(json.dumps(data, indent=4))
+
+    producer = KafkaProducer(bootstrap_servers='localhost:9092', max_block_ms=5000)
+
+    producer.send('users_created', json.dumps(data).encode('utf-8'))
 
 # with DAG('user_automation',
 #     default_args=default_args,
