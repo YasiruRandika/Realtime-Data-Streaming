@@ -38,14 +38,15 @@ def format_data(res):
     return data
 
 def stream_data():
-    from kafka import KafkaProducer
+    from confluent_kafka import Producer
     res = get_data()
     data = format_data(res)
     # print(json.dumps(data, indent=4))
 
-    producer = KafkaProducer(bootstrap_servers='localhost:9092', max_block_ms=5000)
+    producer = Producer({'bootstrap.servers': 'localhost:9092'})
+    producer.produce('users', json.dumps(data).encode('utf-8'))
 
-    producer.send('users_created', json.dumps(data).encode('utf-8'))
+    producer.flush()
 
 # with DAG('user_automation',
 #     default_args=default_args,
@@ -57,5 +58,6 @@ def stream_data():
 #         task_id='streaming_data_from_api',
 #         python_callable=streaming_data_from_api
 #     )
+
 
 stream_data();
