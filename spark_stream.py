@@ -1,7 +1,7 @@
 import logging
 import os
 
-# from cassandra.cluster import Cluster
+from cassandra.cluster import Cluster
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json, col
 from pyspark.sql.types import StructType, StructField, StringType, FloatType
@@ -85,7 +85,7 @@ def create_spark_connection():
     try:
         s_conn = SparkSession.builder \
             .appName("RealTimeDataStreaming") \
-            .config("spark.master", os.environ.get("SPARK_MASTER_URL", "spark://spark-master:7077")) \
+            .config("spark.master", os.environ.get("SPARK_MASTER_URL", "spark://localhost:7077")) \
             .config("spark.driver.host", "local[*]") \
             .config("spark.submit.deployMode", "client") \
             .config("spark.driver.bindAddress", "0.0.0.0") \
@@ -98,6 +98,7 @@ def create_spark_connection():
         s_conn.sparkContext.setLogLevel("ERROR")
         logging.info("Spark Session Created")
     except Exception as e:
+        print("-----------ERRROR---------")
         print(str(e))
         logging.error(f"Error while creating Spark Session: {str(e)}")
 
@@ -105,17 +106,16 @@ def create_spark_connection():
 
 
 def create_cassandra_connection():
-    return None
-    # try:
-    #     # Connecting to the cassandra cluster
-    #     cluster = Cluster(['localhost'])
-    #
-    #     session = cluster.connect()
-    #
-    #     return session
-    # except Exception as e:
-    #     logging.error(f"Error while creating Cassandra Session: {str(e)}")
-    #     return None
+    try:
+        # Connecting to the cassandra cluster
+        cluster = Cluster(['localhost'])
+
+        session = cluster.connect()
+
+        return session
+    except Exception as e:
+        logging.error(f"Error while creating Cassandra Session: {str(e)}")
+        return None
 
 
 def connect_to_kafka(spark_conn):
@@ -165,8 +165,6 @@ def create_selection_df_from_kafka(spark_df):
 
     return sel
 
-
-spark_conn = create_spark_connection()
 if __name__ == "main":
     spark_conn = create_spark_connection()
 
