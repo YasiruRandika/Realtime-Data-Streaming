@@ -1,7 +1,9 @@
 import json
+import time
 from datetime import datetime
-# from airflow import DAG
-# from airflow.operators.python_operator import PythonOperator
+
+from airflow import DAG
+from airflow.operators.python_operator import PythonOperator
 
 default_args = {
     'owner': 'airflow',
@@ -39,25 +41,24 @@ def format_data(res):
 
 def stream_data():
     from confluent_kafka import Producer
-    res = get_data()
-    data = format_data(res)
-    # print(json.dumps(data, indent=4))
 
-    producer = Producer({'bootstrap.servers': 'localhost:9092'})
-    producer.produce('users', json.dumps(data).encode('utf-8'))
+    producer = Producer({'bootstrap.servers': 'broker:29092'})
 
-    producer.flush()
+    current_time = time.time()
 
-# with DAG('user_automation',
-#     default_args=default_args,
-#     schedule_interval='@daily',
-#     catchup=False
-# ) as dag:
-#
-#     streaming_task = PythonOperator(
-#         task_id='streaming_data_from_api',
-#         python_callable=streaming_data_from_api
-#     )
+    while time.time() < current_time + 120:
+        res = get_data()
+        data = format_data(res)
+        producer.produce('users', json.dumps(data).encode('utf-8'))
+        producer.flush()
 
 
-stream_data();
+with DAG('user_automation',
+         default_args=default_args,
+         schedule_interval='@daily',
+         catchup=False
+         ) as dag:
+    streaming_task = PythonOperator(
+        task_id='streaming_data_from_api',
+        python_callable=stream_data
+    )
