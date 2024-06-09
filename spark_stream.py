@@ -1,4 +1,5 @@
 import logging
+import os
 
 from cassandra.cluster import Cluster
 from pyspark.sql import SparkSession
@@ -79,10 +80,15 @@ def insert_data(session, **kwargs):
 
 
 def create_spark_connection():
+    print("Spark Session Creating")
     s_conn = None
     try:
         s_conn = SparkSession.builder \
             .appName("RealTimeDataStreaming") \
+            .config("spark.master", os.environ.get("SPARK_MASTER_URL", "spark://spark-master:7077")) \
+            .config("spark.driver.host", "local[*]") \
+            .config("spark.submit.deployMode", "client") \
+            .config("spark.driver.bindAddress", "0.0.0.0") \
             .config("spark.jars.packages",
                     "com.datastax.spark:spark-cassandra-connector_2.13:3.5.0"
                     "org.apache.spark:spark-sql-kafka-0-10_2.13:3.5.0") \
