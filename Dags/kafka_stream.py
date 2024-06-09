@@ -47,10 +47,14 @@ def stream_data():
     current_time = time.time()
 
     while time.time() < current_time + 120:
-        res = get_data()
-        data = format_data(res)
-        producer.produce('users', json.dumps(data).encode('utf-8'))
-        producer.flush()
+        try:
+            res = get_data()
+            data = format_data(res)
+            producer.produce('users', json.dumps(data).encode('utf-8'))
+            producer.flush()
+
+        except Exception as e:
+            print(e)
 
 
 with DAG('user_automation',
