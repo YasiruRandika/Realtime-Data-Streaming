@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 from datetime import datetime
 
@@ -54,7 +55,8 @@ def stream_data():
             producer.flush()
 
         except Exception as e:
-            print(e)
+            logging.error('Error while producing data: {}'.format(str(e)))
+            time.sleep(5)
 
 
 with DAG('user_automation',
